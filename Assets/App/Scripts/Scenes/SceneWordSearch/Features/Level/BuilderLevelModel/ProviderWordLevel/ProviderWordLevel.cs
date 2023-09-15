@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using App.Scripts.Scenes.SceneWordSearch.Features.Level.Models.Level;
 using UnityEngine;
 using System.IO;
@@ -8,7 +7,7 @@ namespace App.Scripts.Scenes.SceneWordSearch.Features.Level.BuilderLevelModel.Pr
 {
     public class ProviderWordLevel : IProviderWordLevel
     {
-        private string levelsDataPath = Application.dataPath + @"\App\Resources\WordSearch\Levels\";
+        private readonly string levelsDataPath = Application.dataPath + @"\App\Resources\WordSearch\Levels\";
 
         public LevelInfo LoadLevelData(int levelIndex)
         {
@@ -19,7 +18,6 @@ namespace App.Scripts.Scenes.SceneWordSearch.Features.Level.BuilderLevelModel.Pr
             }
             return JsonUtility.FromJson<LevelInfo>(jsonInfo);
         }
-
 
     }
 }

@@ -7,12 +7,10 @@ namespace App.Scripts.Scenes.SceneFillwords.Features.ProviderLevel
 {
     public class ProviderFillwordLevel : IProviderFillwordLevel
     {
-        private string wordsDataPath = Application.dataPath + @"\App\Resources\Fillwords\words_list.txt";
-        private string levelsDataPath = Application.dataPath + @"\App\Resources\Fillwords\pack_0.txt";
-
+        private readonly string wordsDataPath = Application.dataPath + @"\App\Resources\Fillwords\words_list.txt";
+        private readonly string levelsDataPath = Application.dataPath + @"\App\Resources\Fillwords\pack_0.txt";
         public string[] LevelsDescriptions { get; private set; }
         public string[] Vocabulary { get; private set; }
-
         private void Init()
         {
             if (LevelsDescriptions == null)
@@ -20,29 +18,34 @@ namespace App.Scripts.Scenes.SceneFillwords.Features.ProviderLevel
 
             if (Vocabulary == null)
                 Vocabulary = File.ReadAllLines(wordsDataPath);
-
         }
 
         public GridFillWords LoadModel(int index)
         {
             Init();
+            
+            GridFillWords gridFillWords = null;
 
-            WordOnLevel[] wordsOnLevel = GetWordsOnLevelData(LevelsDescriptions[index - 1]);
+            while(gridFillWords == null && index <= LevelsDescriptions.Length)
+            {
+                gridFillWords = FindCorrectLevel(index);
+                ++index;
+            }
 
-            int gridSize = GetGridSize(wordsOnLevel);
+            if (gridFillWords == null)
+                throw new Exception("There is no correct level");
 
-            return CreateGridFillWords(wordsOnLevel, gridSize);
+            return gridFillWords;
         }
 
         private class WordOnLevel
         {
             public string WordText { get; private set; }
             public int[] LettersPositions { get; private set; }
-
             public WordOnLevel(string word, string[] lettesPositions)
             {
                 if (word.Length != lettesPositions.Length) 
-                    throw new Exception("слова из словаря по индексу не совпадает по длине с индексами из уровня");
+                    throw new Exception("Words from index dictionary are not the same length as indexes from level.");
 
                 WordText = word;
                 LettersPositions = new int[lettesPositions.Length];
@@ -53,15 +56,32 @@ namespace App.Scripts.Scenes.SceneFillwords.Features.ProviderLevel
             }
 
         }
+
+        private GridFillWords FindCorrectLevel(int index)
+        {
+            try
+            {
+                WordOnLevel[] wordsOnLevel = GetWordsOnLevelData(LevelsDescriptions[index - 1]);
+
+                int gridSize = GetGridSize(wordsOnLevel);
+
+                return CreateGridFillWords(wordsOnLevel, gridSize);
+            }
+            catch (Exception e)
+            {
+                Debug.Log("Exception: " + e.Message);
+                return null;
+            }
+        }
+
         private WordOnLevel[] GetWordsOnLevelData(string levelInfo)
         {
             string[] wordsData = levelInfo.Split(' ');
 
             var wordsOnLevel = new WordOnLevel[wordsData.Length / 2];
+
             for (int i = 0; i < wordsOnLevel.Length; ++i)
-            {
                 wordsOnLevel[i] = new WordOnLevel(Vocabulary[int.Parse(wordsData[i * 2])], wordsData[i * 2 + 1].Split(';'));
-            }
 
             return wordsOnLevel;
         }
@@ -79,11 +99,11 @@ namespace App.Scripts.Scenes.SceneFillwords.Features.ProviderLevel
                 }
             }
             if (indexCounter != maxIndex + 1)
-                throw new Exception("есть индексы которых не может быть на данном уровне");
+                throw new Exception("There are indices that cannot be at this level.");
 
             int gridSize = (int)Math.Sqrt(indexCounter);
             if (gridSize * gridSize != indexCounter) 
-                throw new Exception("кол-во символов в уровне не возможно уложить в квадратную сетку так, чтобы не было ни пустых и лишних символов");
+                throw new Exception("The number of characters in the level cannot be placed in a square grid.");
 
             return gridSize;
         }
@@ -98,7 +118,7 @@ namespace App.Scripts.Scenes.SceneFillwords.Features.ProviderLevel
                     int row = word.LettersPositions[i] / gridSize;
                     int col = word.LettersPositions[i] % gridSize;
                     if (gridFillWords.Get(row, col) != null)
-                        throw new Exception("в данных уровня в есть символы которые ссылаются на одну и ту же клетку");
+                        throw new Exception("In the level data, there are symbols that refer to the same cell.");
 
                     gridFillWords.Set(row, col, new CharGridModel(word.WordText[i]));
                 }

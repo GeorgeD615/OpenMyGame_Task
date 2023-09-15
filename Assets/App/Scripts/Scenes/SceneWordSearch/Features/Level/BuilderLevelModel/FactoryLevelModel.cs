@@ -23,32 +23,27 @@ namespace App.Scripts.Scenes.SceneWordSearch.Features.Level.BuilderLevelModel
         private List<char> BuildListChars(List<string> words)
         {
             const int alphabetLenght = 33;
-            const int firstSymbNum = (int)'а';
+            const int firstSymbNum = 'а';
 
             var result = new List<char>();
             var mainLettersCount = new int[alphabetLenght];
 
-            foreach (var word in words)
+            foreach (string word in words)
             {
                 int[] currLettersCount = new int[33];
+
                 for (int i = 0; i < word.Length; ++i)
-                {
                     ++currLettersCount[word[i] - firstSymbNum];
-                }
+
                 for (int i = 0; i < mainLettersCount.Length; ++i)
-                {
                     if (currLettersCount[i] > mainLettersCount[i])
                         mainLettersCount[i] = currLettersCount[i];
-                }
             }
 
             for(int i = 0; i < mainLettersCount.Length; ++i)
-            {
                 for(int j = 0; j < mainLettersCount[i]; ++j)
-                {
                     result.Add((char)(i + firstSymbNum));
-                }
-            }
+
             return result;
         }
     }

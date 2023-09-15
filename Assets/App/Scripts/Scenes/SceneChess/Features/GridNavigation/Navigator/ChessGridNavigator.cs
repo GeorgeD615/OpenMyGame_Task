@@ -35,92 +35,63 @@ namespace App.Scripts.Scenes.SceneChess.Features.GridNavigation.Navigator
             public ChessFigureStep PrevStep { get; set; }
         }
 
-        private const int _maxPossibleDistance = 7;
+        private const int MAX_POSSIBLE_DISTANCE = 7;
+        private const int MIN_POSSIBLE_DISTANCE = 1;
 
         private List<Vector2Int> BishopMove(Vector2Int from, Vector2Int to, ChessGrid grid)
         {
             if (!CheckTheSameColor(from, to))
                 return null;
 
-            var queueSteps = new Queue<ChessFigureStep>();
-            queueSteps.Enqueue(new ChessFigureStep() { Position = from, PrevStep = null });
-
             int[] xSteps = new int[] { 1, -1, 1, -1 };
             int[] ySteps = new int[] { 1, 1, -1, -1 };
 
-            return ContinuousChessMovement(queueSteps, xSteps, ySteps, to, grid, _maxPossibleDistance);
+            return ContinuousChessMovement(from, to, grid, MAX_POSSIBLE_DISTANCE, xSteps, ySteps);
         }
         private List<Vector2Int> KingMove(Vector2Int from, Vector2Int to, ChessGrid grid)
         {
-
-            var queueSteps = new Queue<ChessFigureStep>();
-            queueSteps.Enqueue(new ChessFigureStep() { Position = from, PrevStep = null });
-
             int[] xSteps = new int[] { 1, -1, 0, 0, 1, -1, 1, -1};
             int[] ySteps = new int[] { 0, 0, 1, -1, 1, 1, -1, -1};
 
-            return ContinuousChessMovement(queueSteps, xSteps, ySteps, to, grid, 1);
+            return ContinuousChessMovement(from, to, grid, MIN_POSSIBLE_DISTANCE, xSteps, ySteps);
         }
         private List<Vector2Int> KnightMove(Vector2Int from, Vector2Int to, ChessGrid grid)
         {
-            var queueSteps = new Queue<ChessFigureStep>();
-            queueSteps.Enqueue(new ChessFigureStep() { Position = from, PrevStep = null });
-
             int[] xSteps = new int[] { -1, 1, 2, 2, 1, -1, -2, -2 };
             int[] ySteps = new int[] { 2, 2, 1, -1, -2, -2, -1, 1 };
 
-            return ContinuousChessMovement(queueSteps, xSteps, ySteps, to, grid, 1);
+            return ContinuousChessMovement(from, to, grid, MIN_POSSIBLE_DISTANCE, xSteps, ySteps);
         }
         private List<Vector2Int> PonMove(Vector2Int from, Vector2Int to, ChessGrid grid)
         {
             if (from.x != to.x)
                 return null;
 
-            var queueSteps = new Queue<ChessFigureStep>();
-            queueSteps.Enqueue(new ChessFigureStep() { Position = from, PrevStep = null });
-
             int[] xSteps = new int[] { 0, 0};
             int[] ySteps = new int[] { -1, 1};
 
-            return ContinuousChessMovement(queueSteps, xSteps, ySteps, to, grid, 1);
+            return ContinuousChessMovement(from, to, grid, MIN_POSSIBLE_DISTANCE, xSteps, ySteps);
         }
         private List<Vector2Int> QueenMove(Vector2Int from, Vector2Int to, ChessGrid grid)
         {
-
-            var queueSteps = new Queue<ChessFigureStep>();
-            queueSteps.Enqueue(new ChessFigureStep() { Position = from, PrevStep = null });
-
             int[] xSteps = new int[] { 1, -1, 0, 0, 1, -1, 1, -1 };
             int[] ySteps = new int[] { 0, 0, 1, -1, 1, 1, -1, -1 };
 
-            return ContinuousChessMovement(queueSteps, xSteps, ySteps, to, grid, _maxPossibleDistance);
+            return ContinuousChessMovement(from, to, grid, MAX_POSSIBLE_DISTANCE, xSteps, ySteps);
         }
         private List<Vector2Int> RockMove(Vector2Int from, Vector2Int to, ChessGrid grid)
+        {
+            int[] xSteps = new int[] { 1, -1, 0, 0};
+            int[] ySteps = new int[] { 0, 0, 1, -1};
+
+            return ContinuousChessMovement(from, to, grid, MAX_POSSIBLE_DISTANCE, xSteps, ySteps);
+        }
+        private List<Vector2Int> ContinuousChessMovement(Vector2Int from, Vector2Int to, ChessGrid grid, int possibleDistance, int[] xSteps, int[] ySteps)
         {
             var queueSteps = new Queue<ChessFigureStep>();
             queueSteps.Enqueue(new ChessFigureStep() { Position = from, PrevStep = null });
 
-            int[] xSteps = new int[] { 1, -1, 0, 0};
-            int[] ySteps = new int[] { 0, 0, 1, -1};
-
-            return ContinuousChessMovement(queueSteps, xSteps, ySteps, to, grid, _maxPossibleDistance);
-        }
-        private bool CheckTheSameColor(Vector2Int firstPosition, Vector2Int secondPosition)
-        {
-            return ((firstPosition.x + firstPosition.y) % 2 == 0 && (secondPosition.x + secondPosition.y) % 2 == 0) ||
-                ((firstPosition.x + firstPosition.y) % 2 == 1 && (secondPosition.x + secondPosition.y) % 2 == 1);
-        }
-        private bool IsPositionAvailableToMove(Vector2Int pos, ChessGrid grid)
-        {
-            return IsPositionAvailableToMove(pos.y, pos.x, grid);
-        }
-        private bool IsPositionAvailableToMove(int i, int j, ChessGrid grid)
-        {
-            return grid.Get(i, j) == null;
-        }
-        private List<Vector2Int> ContinuousChessMovement(Queue<ChessFigureStep> queueSteps, int[] xSteps, int[] ySteps, Vector2Int to, ChessGrid grid, int possibleDistance)
-        {
-            while(queueSteps.Count != 0)
+            while (queueSteps.Count > 0)
             {
                 for (int i = 0; i < xSteps.Length; ++i)
                 {
@@ -128,10 +99,9 @@ namespace App.Scripts.Scenes.SceneChess.Features.GridNavigation.Navigator
                     {
                         int x = queueSteps.Peek().Position.x + xSteps[i] * j;
                         int y = queueSteps.Peek().Position.y + ySteps[i] * j;
-                        if (x > 7 || x < 0 || y > 7 || y < 0 || !IsPositionAvailableToMove(y, x, grid))
-                            break;
 
-                        if (queueSteps.Select(positionInfo => positionInfo.Position).Contains(new Vector2Int(x, y)))
+                        if (x > 7 || x < 0 || y > 7 || y < 0 || !IsPositionAvailableToMove(y, x, grid) ||
+                            queueSteps.Select(positionInfo => positionInfo.Position).Contains(new Vector2Int(x, y)))
                             break;
 
                         var nextMove = new ChessFigureStep()
@@ -139,16 +109,14 @@ namespace App.Scripts.Scenes.SceneChess.Features.GridNavigation.Navigator
                             Position = new Vector2Int(x, y),
                             PrevStep = queueSteps.Peek()
                         };
+
                         queueSteps.Enqueue(nextMove);
 
                         if (nextMove.Position == to)
-                        {
                             return GetStepsSequence(nextMove);
-                        }
                     }
                 }
                 queueSteps.Dequeue();
-                Debug.Log(queueSteps.Count);
             }
             return null;
         }
@@ -162,6 +130,19 @@ namespace App.Scripts.Scenes.SceneChess.Features.GridNavigation.Navigator
                 lastMove = lastMove.PrevStep;
             }
             return result;
+        }
+        private bool CheckTheSameColor(Vector2Int firstPosition, Vector2Int secondPosition)
+        {
+            return ((firstPosition.x + firstPosition.y) % 2 == 0 && (secondPosition.x + secondPosition.y) % 2 == 0) ||
+                ((firstPosition.x + firstPosition.y) % 2 == 1 && (secondPosition.x + secondPosition.y) % 2 == 1);
+        }
+        private bool IsPositionAvailableToMove(Vector2Int pos, ChessGrid grid)
+        {
+            return IsPositionAvailableToMove(pos.y, pos.x, grid);
+        }
+        private bool IsPositionAvailableToMove(int i, int j, ChessGrid grid)
+        {
+            return grid.Get(i, j) == null;
         }
 
     }
